@@ -2,6 +2,8 @@
 
 A clean, responsive note-taking application built with **React**, **Vite**, and **React Router**. NoteX helps you capture ideas, organize notes, and keep important thoughts easy to find.
 
+## Live demo: https://notexs.netlify.app
+
 ## Features
 
 - **Create notes** — Add a title, content, or both.
