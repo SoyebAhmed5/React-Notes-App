@@ -1,107 +1,174 @@
-import { useReducer } from "react";
-import { IoMdAddCircle } from "react-icons/io";
-import { TbPinnedFilled } from "react-icons/tb";
-import { FaArchive } from "react-icons/fa";
-import { MdDelete } from "react-icons/md";
-import Navbar from "../../components/Navbar";
-import Sidebar from "../../components/Sidebar";
-import notesReducer from "../../reducers/notesReducer";
+import { useMemo } from "react";
+import { FiPlus, FiFeather, FiSearch } from "react-icons/fi";
+import NavBar from "../../components/Navbar";
+import SideBar from "../../components/Sidebar";
+import NotesCard from "../../components/NotesCard";
+import { useNotes } from "../../context/notes-context";
 
-const Home = () => {
-  const initialState = {
-    title: "",
-    text: "",
-    notes: [],
-  };
-
-  const [{ title, text, notes }, notesDispatch] = useReducer(
-    notesReducer,
-    initialState,
+export default function Home({ dark, onToggleTheme, importantOnly = false }) {
+  const { title, text, notes, search, notesDispatch } = useNotes();
+  const visibleNotes = useMemo(
+    () =>
+      notes.filter(
+        (note) =>
+          (!importantOnly || note.isPinned) &&
+          `${note.title} ${note.text}`
+            .toLowerCase()
+            .includes(search.toLowerCase()),
+      ),
+    [notes, search, importantOnly],
   );
-
-  const onTitleChange = (e) => {
-    notesDispatch({ type: "TITLE", payload: e.target.value });
-  };
-
-  const onTextChange = (e) => {
-    notesDispatch({ type: "TEXT", payload: e.target.value });
-  };
-
-  const onAddClick = () => {
+  const pinned = visibleNotes.filter((note) => note.isPinned);
+  const others = visibleNotes.filter((note) => !note.isPinned);
+  const addNote = (e) => {
+    e.preventDefault();
     notesDispatch({ type: "ADD_NOTE" });
-
-    notesDispatch({ type: "CLEAR_FIELDS" });
   };
-
   return (
     <>
-      <Navbar />
-      <main className="flex gap-3">
-        <Sidebar />
-        <div>
-          <div className="flex flex-col w-75 relative">
-            <input
-              value={title}
-              onChange={onTitleChange}
-              className="border"
-              type="text"
-              placeholder="Enter Title"
-            />
-
-            <textarea
-              value={text}
-              onChange={onTextChange}
-              className="border"
-              placeholder="Enter text"
-            />
-
-            <button
-              onClick={onAddClick}
-              disabled={title.length === 0}
-              className="absolute bottom-0 right-0">
+      <NavBar dark={dark} onToggleTheme={onToggleTheme} />
+      <div className="app-layout">
+        <SideBar />
+        <main className="main-content">
+          <section className="welcome-row">
+            <div>
+              <p className="eyebrow">
+                {importantOnly ? "YOUR FAVORITES" : "YOUR PERSONAL SPACE"}
+              </p>
+              <h1>
+                {importantOnly ? "Important notes" : "Good ideas start here."}
+              </h1>
+              <p className="subtitle">
+                {importantOnly
+                  ? "The thoughts you’ve starred for quick access."
+                  : "Capture a thought before it slips away."}
+              </p>
+            </div>
+            <div className="notes-stat">
+              <span>{visibleNotes.length.toString().padStart(2, "0")}</span>
+              <small>
+                {visibleNotes.length === 1 ? "NOTE" : "NOTES"} IN VIEW
+              </small>
+            </div>
+          </section>
+          {!importantOnly && (
+            <form className="composer" onSubmit={addNote}>
+              <div className="composer-heading">
+                <span className="composer-icon">
+                  <FiFeather />
+                </span>
+                <div>
+                  <strong>Capture a thought</strong>
+                  <p>What's on your mind today?</p>
+                </div>
+                <span className="composer-hint">NEW NOTE</span>
+              </div>
+              <input
+                value={title}
+                onChange={(e) =>
+                  notesDispatch({ type: "TITLE", payload: e.target.value })
+                }
+                placeholder="Give your note a title..."
+                aria-label="Note title"
+                maxLength={120}
+              />
+              <textarea
+                value={text}
+                onChange={(e) =>
+                  notesDispatch({ type: "TEXT", payload: e.target.value })
+                }
+                placeholder="Start writing your thoughts here..."
+                aria-label="Note content"
+                rows={3}
+              />
+              <div className="composer-footer">
+                <span>{text.length} characters</span>
+                <button
+                  className="primary-button"
+                  type="submit"
+                  disabled={!title.trim() && !text.trim()}>
+                  <FiPlus /> Add note
+                </button>
+              </div>
+            </form>
+          )}
+          <div className="notes-heading">
+            <div>
+              <h2>
+                {search
+                  ? "Search results"
+                  : importantOnly
+                    ? "Starred notes"
+                    : "Your notes"}
+              </h2>
               <span>
-                <IoMdAddCircle />
+                {visibleNotes.length}{" "}
+                {visibleNotes.length === 1 ? "note" : "notes"}
               </span>
-            </button>
+            </div>
           </div>
-          <div className="mt-8">
-            {notes?.length > 0 &&
-              notes.map(({ id, title, text }) => {
-                return (
-                  <div
-                    key={id}
-                    className="w-75 border border-neutral-800 p-2 rounded-md">
-                    <div className="flex justify-between">
-                      <p>{title}</p>
-                      <button>
-                        <span>
-                          <TbPinnedFilled />
-                        </span>
-                      </button>
-                    </div>
-                    <div className="flex flex-col">
-                      <p>{text}</p>
-                      <div className="ml-auto">
-                        <button>
-                          <span>
-                            <FaArchive />
-                          </span>
-                        </button>
-                        <button>
-                          <span>
-                            <MdDelete />
-                          </span>
-                        </button>
-                      </div>
-                    </div>
+          {visibleNotes.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <FiSearch />
+              </div>
+              <h3>
+                {search
+                  ? "No matching notes"
+                  : importantOnly
+                    ? "Nothing starred yet"
+                    : "A fresh page"}
+              </h3>
+              <p>
+                {search
+                  ? "Try another keyword or clear your search."
+                  : importantOnly
+                    ? "Tap the star on a note to keep it close."
+                    : "Your notes will show up here. Add your first thought above."}
+              </p>
+            </div>
+          ) : (
+            <>
+              {pinned.length > 0 && (
+                <section className="note-section">
+                  <h3 className="section-label">
+                    STARRED <span>{pinned.length}</span>
+                  </h3>
+                  <div className="notes-grid">
+                    {pinned.map((note) => (
+                      <NotesCard
+                        key={note.id}
+                        note={note}
+                        dispatch={notesDispatch}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-          </div>
-        </div>
-      </main>
+                </section>
+              )}
+              {others.length > 0 && (
+                <section className="note-section">
+                  <h3 className="section-label">
+                    {pinned.length ? "OTHER NOTES" : "RECENT NOTES"}{" "}
+                    <span>{others.length}</span>
+                  </h3>
+                  <div className="notes-grid">
+                    {others.map((note) => (
+                      <NotesCard
+                        key={note.id}
+                        note={note}
+                        dispatch={notesDispatch}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          )}
+          <footer className="page-footer">
+            Made for your thoughts <span>✦</span>
+          </footer>
+        </main>
+      </div>
     </>
   );
-};
-
-export default Home;
+}
