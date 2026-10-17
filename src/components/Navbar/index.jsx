@@ -1,14 +1,39 @@
-import logo from "../../assets/logo.png";
+import { FiSearch, FiSun, FiMoon } from "react-icons/fi";
+import { useNotes } from "../../context/notes-context";
 
-const Navbar = () => {
+export default function NavBar({ dark, onToggleTheme }) {
+  const { search, notesDispatch } = useNotes();
   return (
-    <header className="flex px-5 py-2 gap-3 border-b-2 border-gray-100 ">
-      <div className="w-12">
-        <img src={logo} alt="NoteX Logo" className="w-full h-full " />
+    <header className="topbar">
+      <a className="brand" href="/" aria-label="NoteX home">
+        <span className="brand-mark">N</span>
+        <span>
+          Note<span className="brand-accent">X</span>
+          <small>YOUR THOUGHTS, ORGANIZED</small>
+        </span>
+      </a>
+      <label className="search-box">
+        <FiSearch />
+        <input
+          value={search}
+          onChange={(e) =>
+            notesDispatch({ type: "SEARCH", payload: e.target.value })
+          }
+          placeholder="Search your notes..."
+          aria-label="Search notes"
+        />
+        <kbd>⌘ K</kbd>
+      </label>
+      <button
+        className="icon-button theme-toggle"
+        onClick={onToggleTheme}
+        aria-label="Toggle color theme"
+        title="Toggle theme">
+        {dark ? <FiSun /> : <FiMoon />}
+      </button>
+      <div className="avatar" title="Your workspace">
+        S
       </div>
-      <h1 className="text-indigo-800 text-4xl font-bold">NoteX</h1>
     </header>
   );
-};
-
-export default Navbar;
+}

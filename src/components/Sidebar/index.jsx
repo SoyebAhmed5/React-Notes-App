@@ -1,33 +1,53 @@
 import { NavLink } from "react-router-dom";
-import { FaHome } from "react-icons/fa";
-import { IoArchive } from "react-icons/io5";
-import { MdLabelImportant } from "react-icons/md";
-import { IoTrashBinSharp } from "react-icons/io5";
+import { FiHome, FiArchive, FiStar, FiTrash2 } from "react-icons/fi";
+import { useNotes } from "../../context/notes-context";
 
-const Sidebar = () => {
-
-    const getStyle = ({ isActive}) =>{
-        const style=' flex gap-1 items-center px-2 py-1 rounded-tr-full rounded-br-full'
-        return isActive?  `bg-blue-500 text-slate-50 ${style}`  : ` hover:bg-blue-500 hover:text-slate-50 ${style}`
-    }
-
+export default function SideBar() {
+  const { notes, archive, trash } = useNotes();
+  const links = [
+    { to: "/", label: "All notes", icon: <FiHome />, count: notes.length },
+    {
+      to: "/important",
+      label: "Important",
+      icon: <FiStar />,
+      count: notes.filter((n) => n.isPinned).length,
+    },
+    {
+      to: "/archive",
+      label: "Archive",
+      icon: <FiArchive />,
+      count: archive.length,
+    },
+    {
+      to: "/bin",
+      label: "Recently deleted",
+      icon: <FiTrash2 />,
+      count: trash.length,
+    },
+  ];
   return (
-    <aside className="flex flex-col gap-3 border-r-2 border-gray-100 w-[150px] h-screen p-3">
-      <NavLink to='/'className={getStyle}>
-
-        <span><FaHome /></span> <span>Home</span>
-      </NavLink>
-      <NavLink to='/archive' className={getStyle}>
-        <span><IoArchive /></span> <span>Archive</span>
-      </NavLink>
-      <NavLink to='/important' className={getStyle}>
-        <span><MdLabelImportant /></span> <span>Important</span>
-      </NavLink>
-      <NavLink to='/bin' className={getStyle}>
-        <span><IoTrashBinSharp /></span> <span>Bin</span>
-      </NavLink>
+    <aside className="sidebar">
+      <p className="sidebar-label">WORKSPACE</p>
+      <nav>
+        {links.map((link) => (
+          <NavLink
+            end={link.to === "/"}
+            key={link.to}
+            to={link.to}
+            className={({ isActive }) =>
+              `nav-link ${isActive ? "active" : ""}`
+            }>
+            <span className="nav-icon">{link.icon}</span>
+            <span>{link.label}</span>
+            {link.count > 0 && <span className="nav-count">{link.count}</span>}
+          </NavLink>
+        ))}
+      </nav>
+      <div className="sidebar-bottom">
+        <div className="tip-icon">✦</div>
+        <strong>A little space to think.</strong>
+        <p>Keep your ideas close and your mind clear.</p>
+      </div>
     </aside>
   );
-};
-
-export default Sidebar;
+}
